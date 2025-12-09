@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Happy Birthday Babe</title>
+<style>
+/* GLOBAL / RESET */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue';}
+body{background:linear-gradient(180deg,#fff0f8 0%, #fff6ff 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+.site-wrap{width:100%;max-width:980px;background:transparent;position:relative}
+
+/* PASSCODE / LOCK SCREEN */
+#passcode-screen{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;animation:fadeIn .9s ease}
+.lock-photo{width:170px;height:170px;border-radius:50%;overflow:hidden;border:8px solid rgba(255,111,194,.15);box-shadow:0 8px 30px rgba(255,111,194,.12);display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#fff,#ffeef8);position:relative;transform:translateY(-10px)}
+.lock-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.camera-hint{position:absolute;right:6px;bottom:6px;background:#fff;padding:6px;border-radius:999px;font-size:11px;border:1px dashed #ffd4ef}
+.pass-title{color:#ff4fb2;font-size:22px;margin:0}
+.pass-input{padding:12px 14px;border-radius:12px;border:2px solid #ffd6ec;background:rgba(255,255,255,0.9);font-size:18px;outline:none;width:200px;text-align:center}
+.unlock-btn{padding:10px 18px;border-radius:12px;border:none;background:linear-gradient(90deg,#ff8ad4,#ff5fbf);color:#fff;font-weight:600;cursor:pointer}
+.unlock-btn:active{transform:translateY(1px)}
+.hint{font-size:13px;color:#c2468b}
+#confetti-canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:5}
+
+/* MAIN BIRTHDAY LAYOUT */
+#main-content{
+  display:none;
+  background:rgba(255,255,255,0.45);
+  backdrop-filter:blur(6px);
+  border-radius:20px;
+  padding:22px;
+  box-shadow:0 8px 30px rgba(0,0,0,.08);
+  position:relative;
+  overflow:hidden;
+}
+#main-content::before{
+  content:"";
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  background-image:url('bg.jpeg'); /* replace with your image */
+  background-size:cover;
+  background-position:center;
+  opacity:0.75;
+  z-index:0;
+}
+.hero, .panel{position:relative; z-index:1;}
+.hero{display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px}
+.hero h1{font-size:28px;margin:0;color:#ff2f92;letter-spacing:0.5px}
+.hero .center-card{width:100%;max-width:520px;border-radius:18px;padding:14px;background:linear-gradient(180deg,#fff,#fff7fb);box-shadow:0 6px 20px rgba(255,76,148,.06);text-align:center}
+.center-card video{width:70%;aspect-ratio:4/3;border-radius:14px;margin:auto;display:block}
+.center-card h3{margin:12px 0 6px;font-size:20px;color:#ff4fb2}
+.center-card p{margin:0 10px 10px;color:#6b2350}
+.labels{display:flex;gap:12px;justify-content:center;margin-top:8px}
+.label-btn{padding:10px 14px;border-radius:999px;border:none;background:linear-gradient(90deg,#ffd1ea,#ff9fd6);cursor:pointer;font-weight:600}
+.panel{max-width:860px;margin:18px auto 6px;background:linear-gradient(180deg,#ffffff,#fff5fb);border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.06);overflow:hidden;transform-origin:top center}
+.panel.hidden{display:none}
+.profile-inner, .read-inner{display:flex;gap:14px;align-items:flex-start}
+.profile-inner .profile-image, .read-inner .read-image{flex:0 0 210px;border-radius:12px;overflow:hidden}
+.profile-inner img, .read-inner img{width:100%;height:100%;object-fit:cover}
+.profile-text, .read-text{flex:1}
+.profile-text h3, .read-text h3{margin-top:0;color:#ff4fb2}
+.profile-text p, .read-text p{color:#6b2450;line-height:1.45}
+.twenty-inner{text-align:center}
+.twenty-inner .single-photo{max-width:420px;margin:0 auto;border-radius:12px;overflow:hidden}
+.collect-btn{margin-top:12px;padding:8px 12px;border-radius:999px;border:none;background:linear-gradient(90deg,#ffd1ea,#ff9fd6);cursor:pointer}
+.reveal-down{animation:slideDown .5s cubic-bezier(.2,.9,.2,1) forwards}
+.reveal-up{animation:slideUp .45s cubic-bezier(.2,.9,.2,1) forwards}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* LIGHTBOX */
+#lightbox{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);backdrop-filter:blur(2px);z-index:20;align-items:center;justify-content:center;flex-direction:column;animation:fadeSlide 0.5s ease forwards}
+#lightbox img{max-width:80%;max-height:70%;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.3);transition:transform 0.3s;}
+#lightbox button.close-btn{position:absolute;top:20px;right:20px;background:#ff9fd6;color:#fff;border:none;padding:8px 12px;border-radius:12px;font-weight:600;cursor:pointer;z-index:25;}
+#lightbox button.nav-btn{position:absolute;top:50%;transform:translateY(-50%);background:#ffd1ea;color:#fff;border:none;padding:10px 14px;border-radius:999px;font-weight:600;cursor:pointer;z-index:25;}
+#lightbox button.prev-btn{left:5%;} 
+#lightbox button.next-btn{right:5%;}
+
+@keyframes fadeSlide{
+from{opacity:0;transform:translateY(20px);}
+to{opacity:1;transform:translateY(0);}
+}
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="site-wrap">
+
+<!-- PASSCODE SCREEN -->
+<div id="passcode-screen">
+<div class="lock-photo">
+<img id="lock-img" src="lock.jpg" alt="Lock Photo" onerror="this.style.filter='grayscale(30%)'" />
+<div class="camera-hint"></div>
+</div>
+<div style="text-align:center">
+<h2 class="pass-title">Enter Passcode</h2>
+<input id="passcode-input" class="pass-input" type="password" placeholder="••••••" />
+<div style="margin-top:10px"><button class="unlock-btn" onclick="checkPasscode()">Unlock</button></div>
+<div class="hint">Hint: <strong>Birth date(mm/dd/year)</strong></div>
+</div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main-content">
+<div class="hero">
+<h1>Happy Birthday Babe &lt;3</h1>
+<div class="center-card">
+<video id="center-video" src="vid.mov" autoplay loop muted playsinline></video>
+<h3>Happy 21.</h3>
+<p>Wishing you a day filled with joy, love, happiness, blessings and my utmost affection.</p>
+</div>
+<div class="labels">
+<button class="label-btn" onclick="openPanel('profile')">Profile</button>
+<button class="label-btn" onclick="openPanel('twenty')">Twenty One</button>
+<button class="label-btn" onclick="openPanel('read')">Read Me</button>
+</div>
+</div>
+
+<!-- PROFILE PANEL -->
+<div id="panel-profile" class="panel hidden">
+<div class="profile-inner">
+<div class="profile-image"><img src="mom.jpeg" alt="Profile Left" /></div>
+<div class="profile-text"><h3>A little About You</h3><p>She is the youngest daughter full of ambition and dreams. With a heart full of determination. She always gives her best at everything though at times, she is unsure of herself. For her, Family is the greatest treasure and her source for strength and her dreams. She is funny, flippant, joyful, and very strong.</p></div>
+</div>
+</div>
+
+<!-- TWENTY PANEL -->
+<div id="panel-twenty" class="panel hidden">
+<div class="twenty-inner">
+<div class="single-photo"><img src="21.jpeg" alt="Twenty One" style="width:100%;display:block;border-radius:10px" /></div>
+<button class="collect-btn" id="collect-btn">Collect</button>
+</div>
+</div>
+
+<!-- READ PANEL -->
+<div id="panel-read" class="panel hidden">
+<div class="read-inner">
+<div class="read-image"><img src="HBD.jpeg" alt="Read Left" /></div>
+<div class="read-text"><h3>Happy Birthday Pasang!</h3><p>Happy Birthday to the most cutest and adorable being in my world. You are the greatest gift and blessing god sent my way. You deserve all the things you've worked for and never doubt yourself when you're so hardworking. I hope this 21st year will be the most bright and brimming year of your life. Keep chasing your dreams ,Keep dazzling, Keep Smiling, never stop believing in yourself and always remember to love yourself(Although I love you more hehe :) ).</p></div>
+</div>
+</div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+<button class="close-btn" onclick="closeLightbox()">✕</button>
+<img id="lightbox-img" src="" />
+<button class="nav-btn prev-btn" onclick="prevLightbox()">◀</button>
+<button class="nav-btn next-btn" onclick="nextLightbox()">▶</button>
+</div>
+
+<!-- BACKGROUND AUDIO -->
+<audio id="bgMusic" src="Mitski - My Love Mine All Mine (Official Lyric Video).mp3" loop></audio>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+
+// BACKGROUND MUSIC
+const bgMusic=document.getElementById('bgMusic');
+function playMusic(){
+  bgMusic.volume=0.5;
+  bgMusic.play().catch(e=>console.log('Autoplay blocked',e));
+}
+
+// PASSCODE
+function checkPasscode(){
+const entered=document.getElementById('passcode-input').value.trim();
+if(entered==='12112004'){
+document.getElementById('passcode-screen').style.display='none';
+document.getElementById('main-content').style.display='block';
+playMusic();
+startConfettiLoop();
+} else alert('Wrong passcode!');
+}
+window.checkPasscode=checkPasscode;
+
+// PANEL NAVIGATION
+function openPanel(name){
+const panels={profile:'panel-profile',twenty:'panel-twenty',read:'panel-read'};
+Object.values(panels).forEach(id=>document.getElementById(id).classList.add('hidden'));
+document.getElementById(panels[name]).classList.remove('hidden');
+}
+window.openPanel=openPanel;
+
+// LIGHTBOX
+const images=['1.jpeg','2.jpeg','3.jpeg'];
+let lightboxIndex=0;
+let collected=false;
+
+const collectBtn=document.getElementById('collect-btn');
+collectBtn.addEventListener('click',function(){
+collected=true;
+openLightbox(0);
+});
+
+function openLightbox(index){
+if(!collected) return;
+lightboxIndex=index;
+document.getElementById('lightbox-img').src=images[lightboxIndex];
+document.getElementById('lightbox').style.display='flex';
+}
+window.openLightbox=openLightbox;
+
+function closeLightbox(){document.getElementById('lightbox').style.display='none';}
+window.closeLightbox=closeLightbox;
+
+function nextLightbox(){
+lightboxIndex=(lightboxIndex+1)%images.length;
+document.getElementById('lightbox-img').src=images[lightboxIndex];
+}
+window.nextLightbox=nextLightbox;
+
+function prevLightbox(){
+lightboxIndex=(lightboxIndex-1+images.length)%images.length;
+document.getElementById('lightbox-img').src=images[lightboxIndex];
+}
+window.prevLightbox=prevLightbox;
+
+// CONFETTI
+const confettiCanvas=document.getElementById('confetti-canvas');
+const ctx=confettiCanvas.getContext('2d');
+let confettiPieces=[];
+
+function setCanvasSize(){confettiCanvas.width=window.innerWidth; confettiCanvas.height=window.innerHeight;}
+window.addEventListener('resize',setCanvasSize); setCanvasSize();
+
+function random(min,max){return Math.random()*(max-min)+min;}
+
+function createConfetti(){
+const colors=['#ff9fd6','#ffd1ea','#fff07a','#aee9ff','#ffc6e3'];
+confettiPieces=[];
+for(let i=0;i<80;i++){
+confettiPieces.push({
+x:random(0,confettiCanvas.width),
+y:random(-confettiCanvas.height,0),
+w:random(6,12),
+h:random(8,18),
+color:colors[Math.floor(random(0,colors.length))],
+rot:random(0,360),
+velY:random(2,4), // moderate speed
+velX:random(-1.5,1.5),
+rotSpeed:random(-4,4),
+life:random(180,360)
+});
+}
+}
+
+function drawConfetti(){
+ctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+confettiPieces.forEach(p=>{
+p.x+=p.velX; p.y+=p.velY; p.rot+=p.rotSpeed; p.velY+=0.01;
+ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+ctx.fillStyle=p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+});
+confettiPieces.forEach(p=>{if(p.y>confettiCanvas.height){p.y=random(-20,0);p.x=random(0,confettiCanvas.width);}});
+}
+
+function startConfettiLoop(){
+createConfetti();
+let startTime=Date.now();
+function loop(){
+let elapsed=(Date.now()-startTime)/1000;
+if(elapsed>30){ // stop for 3s
+setTimeout(()=>{
+startTime=Date.now();
+createConfetti();
+requestAnimationFrame(loop);
+},3000);
+return;
+}
+drawConfetti();
+requestAnimationFrame(loop);
+}
+loop();
+}
+
+});
+</script>
+
+</body>
+</html>
